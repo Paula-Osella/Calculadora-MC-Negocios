@@ -266,7 +266,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const { jsPDF } = window.jspdf;
 
-            html2canvas(facturaPreview, { scale: 2, useCORS: true }).then(canvas => {
+            // ***** INICIO DE LA MODIFICACIÓN PARA LA SOLUCIÓN DEL PDF *****
+            const content = facturaPreview.innerHTML;
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            tempDiv.style.width = '800px'; // Ancho fijo para una calidad óptima
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px'; // Lo movemos fuera de la pantalla
+            document.body.appendChild(tempDiv);
+            
+            html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
                 const imgData = canvas.toDataURL("image/png");
                 const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
@@ -288,10 +298,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 pdf.save(`factura-${cartaPorte}.pdf`);
                 showStatusMessage("Factura descargada correctamente.", "success");
+                
+                // Eliminamos el div temporal después de la descarga
+                document.body.removeChild(tempDiv);
             }).catch(error => {
                 console.error("Error al generar el PDF:", error);
                 showStatusMessage("Hubo un error al generar el PDF.", "error");
+                // Aseguramos que el div temporal se elimine incluso en caso de error
+                if(tempDiv && tempDiv.parentNode) {
+                    document.body.removeChild(tempDiv);
+                }
             });
+            // ***** FIN DE LA MODIFICACIÓN *****
+
         }, 50);
     });
 
