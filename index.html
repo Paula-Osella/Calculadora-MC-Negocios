@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Configuración básica del documento HTML -->
+    <meta charset="UTF-8" />
+    <!-- Configuración del viewport para asegurar que la página sea responsiva en diferentes dispositivos -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+    <!-- Título de la página que aparece en la pestaña del navegador -->
+    <title>Calculadora de Factura - Cereales</title>
+
+    <!-- Enlaces a librerías y hojas de estilo externas -->
+    <!-- Script de Tailwind CSS CDN: Proporciona clases de utilidad para el diseño y el estilo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Enlace a Google Fonts para importar la fuente 'Inter' -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Enlace a tu hoja de estilos personalizada (styles.css) -->
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<!-- Cuerpo de la página: Contiene todo el contenido visible -->
+<body class="bg-[#fefcf6] font-inter min-h-screen flex flex-col items-center p-4">
+    <!-- Contenedor principal de la aplicación de cálculo de facturas -->
+    <div id="app-container" class="w-full max-w-3xl bg-white p-6 rounded-xl shadow-md">
+
+        <!-- Sección superior con el logo y el botón de cambio de tema -->
+        <div class="bg-[#1f2937] p-6 -m-6 mb-6 rounded-t-xl text-white flex justify-between items-center relative">
+            <!-- Logo de la empresa MC Negocios -->
+               <img src="assets/img/logo-mc-negocios.png" alt="Logo de MC Negocios"
+                class="w-full max-w-[200px] mx-auto mb-6 rounded-lg" />
+
+            <!-- Botón para alternar entre el modo claro y oscuro -->
+            <button id="theme-toggle"
+                class="absolute top-4 right-4 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition">
+                <!-- Icono de luna (visible en modo claro) -->
+                <svg id="moon-icon" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
+                    </path>
+                </svg>
+                <!-- Icono de sol (visible en modo oscuro) -->
+                <svg id="sun-icon" class="w-6 h-6 text-white hidden" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+                    </path>
+                </svg>
+            </button>
+        </div>
+        <!-- Título de la sección principal del formulario -->
+        <div>
+            <h1 class="text-3xl font-bold text-center">Registro de Compra de Cereal</h1>
+        </div>
+        <!-- Formulario para ingresar los datos de la compra de cereal -->
+        <form id="compraForm" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <!-- Campo de entrada para la fecha de la compra -->
+            <div class="flex flex-col">
+                <label for="fecha" class="mb-1 font-semibold text-[#1f2937]">Fecha:</label>
+                <input type="date" id="fecha" required class="border border-[#1f2937] rounded px-3 py-2" />
+            </div>
+            <!-- Campo de entrada para el número de carta de porte -->
+            <div class="flex flex-col">
+                <label for="cartaPorte" class="mb-1 font-semibold text-[#1f2937]">N° Carta de Porte:</label>
+                <input type="text" id="cartaPorte" placeholder="Ej: 123456789" required
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+            </div>
+            <!-- Selector para el tipo de producto (cereal) -->
+            <div class="flex flex-col">
+                <label for="producto" class="mb-1 font-semibold text-[#1f2937]">Producto:</label>
+                <select id="producto" required class="border border-[#1f2937] rounded px-3 py-2">
+                    <option value="Soja">Soja</option>
+                    <option value="Maíz">Maíz</option>
+                    <option value="Trigo">Trigo</option>
+                    <option value="Cebada">Cebada</option>
+                </select>
+            </div>
+            <!-- Campo de entrada para los kilogramos -->
+            <div class="flex flex-col">
+                <label for="kilos" class="mb-1 font-semibold text-[#1f2937]">Kilogramos:</label>
+                <input type="number" id="kilos" placeholder="Ej: 1000" required
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+            </div>
+            <!-- Campo de entrada para el precio por kilo -->
+            <div class="flex flex-col">
+                <label for="precio" class="mb-1 font-semibold text-[#1f2937]">Precio por kilo ($):</label>
+                <input type="number" id="precio" placeholder="Ej: 0.50" step="0.01" required
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+            </div>
+            <!-- Campo de entrada para el porcentaje de descuento -->
+            <div class="flex flex-col">
+                <label for="descuento" class="mb-1 font-semibold text-[#1f2937]">Descuento (%):</label>
+                <input type="number" id="descuento" value="0" placeholder="Ej: 5"
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+            </div>
+            <!-- Campo de entrada para el porcentaje de impuesto -->
+            <div class="flex flex-col">
+                <label for="impuesto" class="mb-1 font-semibold text-[#1f2937]">Impuesto (%):</label>
+                <input type="number" id="impuesto" value="0" placeholder="Ej: 21"
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+            </div>
+            <!-- Botón para generar la factura, abarcando dos columnas en pantallas pequeñas -->
+            <div class="sm:col-span-2 flex justify-center mt-4">
+                <button type="submit" id="generateInvoiceBtn"
+                    class="bg-[#1f2937] text-white px-6 py-3 rounded shadow hover:bg-[#374151] transition font-semibold">
+                    Generar Factura
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Contenedor para la previsualización de la factura (inicialmente oculto) -->
+    <div id="factura-container"
+        class="hidden w-full max-w-3xl bg-white p-6 rounded-xl shadow-md mt-6 flex flex-col items-center">
+        <!-- Título de la sección de previsualización -->
+        <h2 class="text-2xl font-bold mb-4 text-[#1f2937]">Previsualización de Factura</h2>
+        <!-- Área donde se mostrará el contenido de la factura generada -->
+        <div id="factura-preview" class="w-full mb-6">
+        </div>
+        <!-- Botones de acción para la factura (descargar PDF, nuevo cálculo) -->
+        <div class="factura-actions flex gap-4">
+            <button id="downloadPdfBtn"
+                class="bg-[#1f2937] text-white px-6 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+                Descargar Factura PDF
+            </button>
+            <button id="newCalculationBtn"
+                class="bg-[#1f2937] text-white px-6 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+                Nuevo Cálculo
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenedor para el historial de facturación -->
+    <div id="historial-container" class="max-w-3xl w-full p-6 mt-10 bg-white rounded-xl shadow-md">
+        <!-- Título de la sección de historial -->
+        <h2 class="text-center text-2xl font-bold mb-6 text-[#1f2937]">Historial de facturacion</h2>
+        <!-- Formulario de filtros para buscar en el historial -->
+        <form id="filtroHistorial"
+            class="flex flex-wrap gap-2 items-center justify-start w-full max-w-5xl mx-auto mb-4">
+            <!-- Campo de entrada para filtrar por fecha "Desde" -->
+            <input type="date" id="filtroFechaDesde" class="border border-[#1f2937] rounded px-3 py-2 w-full sm:w-auto"
+                placeholder="Desde" />
+            <!-- Campo de entrada para filtrar por fecha "Hasta" -->
+            <input type="date" id="filtroFechaHasta" class="border border-[#1f2937] rounded px-3 py-2 w-full sm:w-auto"
+                placeholder="Hasta" />
+            <!-- Campo de entrada para filtrar por número de carta de porte -->
+            <input type="text" id="filtroCartaPorte" class="border border-[#1f2937] rounded px-3 py-2 w-full sm:w-auto"
+                placeholder="N° Carta de Porte" />
+            <!-- Botón para aplicar los filtros de búsqueda -->
+            <button type="submit"
+                class="bg-[#1f2937] text-white px-5 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+                Buscar
+            </button>
+            <!-- Botón para limpiar los filtros aplicados -->
+            <button type="button" id="limpiarFiltros"
+                class="bg-[#1f2937] text-white px-5 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+                Limpiar
+            </button>
+            <!-- Botón para ver todas las facturas sin aplicar filtros -->
+            <button type="button" id="verTodasFacturas"
+                class="bg-[#1f2937] text-white px-5 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+                Todas las facturas
+            </button>
+        </form>
+        <!-- Contenedor para la tabla del historial, con desplazamiento horizontal si el contenido es muy ancho -->
+        <div class="tabla-scroll-wrapper overflow-x-auto">
+            <!-- Tabla donde se mostrarán las facturas del historial -->
+            <table class="w-full text-left border-collapse border border-[#1f2937]">
+                <!-- Cabecera de la tabla con los títulos de las columnas -->
+                <thead class="bg-[#1f2937] text-white">
+                    <tr>
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Fecha</th>
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">N°</th>
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap ">Producto</th>
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap ">Kilos</th>
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Precio</th>
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Descuento</th>
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Impuesto</th>
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Total</th>
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap"></th>
+                    </tr>
+                </thead>
+                <!-- Cuerpo de la tabla donde se insertarán dinámicamente las filas de facturas -->
+                <tbody id="tablaHistorialBody">
+                    <!-- Las filas de facturas se renderizarán aquí con JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Carga de librerías JavaScript al final del body para asegurar que el DOM esté completamente cargado antes de que se ejecute el script -->
+    <!-- Librería html2canvas: Utilizada para capturar el contenido HTML y convertirlo en una imagen (para el PDF) -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- Librería jsPDF: Utilizada para generar y manipular documentos PDF -->
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <!-- Librería SweetAlert2: Para mostrar alertas y confirmaciones personalizadas -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Tu archivo JavaScript principal: Contiene toda la lógica de la aplicación -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>

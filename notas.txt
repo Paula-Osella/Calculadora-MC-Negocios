@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+
+
+<head>
+
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+
+    <title>Calculadora de Factura - Cereales</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+   
+
+    <link rel="stylesheet" href="css/style.css" />
+
+   
+
+</head>
+
+
+
+<body class="bg-[#fefcf6] font-inter min-h-screen flex flex-col items-center p-4">
+
+    <div id="app-container" class="w-full max-w-3xl bg-white p-6 rounded-xl shadow-md">
+
+        <!-- Contenedor del header con fondo del nuevo color -->
+
+        <div class="bg-[#1f2937] p-6 -m-6 mb-6 rounded-t-xl text-white">
+
+            <img src="assets/img/logo-mc-negocios.png" alt="Logo de MC Negocios"
+
+                class="w-full max-w-[200px] mx-auto mb-6 rounded-lg" />
+
+        </div>
+
+        <div>
+
+            <h1 class="text-3xl font-bold text-center">Registro de Compra de Cereal</h1>
+
+        </div>
+
+        <form id="compraForm" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+
+            <div class="flex flex-col">
+
+                <label for="fecha" class="mb-1 font-semibold text-[#1f2937]">Fecha:</label>
+
+                <input type="date" id="fecha" required class="border border-[#1f2937] rounded px-3 py-2" />
+
+            </div>
+
+            <div class="flex flex-col">
+
+                <label for="cartaPorte" class="mb-1 font-semibold text-[#1f2937]">N° Carta de Porte:</label>
+
+                <input type="text" id="cartaPorte" placeholder="Ej: 123456789" required
+
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+
+            </div>
+
+            <div class="flex flex-col">
+
+                <label for="producto" class="mb-1 font-semibold text-[#1f2937]">Producto:</label>
+
+                <select id="producto" required class="border border-[#1f2937] rounded px-3 py-2">
+
+                    <option value="Soja">Soja</option>
+
+                    <option value="Maíz">Maíz</option>
+
+                    <option value="Trigo">Trigo</option>
+
+                    <option value="Cebada">Cebada</option>
+
+                </select>
+
+            </div>
+
+            <div class="flex flex-col">
+
+                <label for="kilos" class="mb-1 font-semibold text-[#1f2937]">Kilogramos:</label>
+
+                <input type="number" id="kilos" placeholder="Ej: 1000" required
+
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+
+            </div>
+
+            <div class="flex flex-col">
+
+                <label for="precio" class="mb-1 font-semibold text-[#1f2937]">Precio por kilo ($):</label>
+
+                <input type="number" id="precio" placeholder="Ej: 0.50" step="0.01" required
+
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+
+            </div>
+
+            <div class="flex flex-col">
+
+                <label for="descuento" class="mb-1 font-semibold text-[#1f2937]">Descuento (%):</label>
+
+                <input type="number" id="descuento" value="0" placeholder="Ej: 5"
+
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+
+            </div>
+
+            <div class="flex flex-col">
+
+                <label for="impuesto" class="mb-1 font-semibold text-[#1f2937]">Impuesto (%):</label>
+
+                <input type="number" id="impuesto" value="0" placeholder="Ej: 21"
+
+                    class="border border-[#1f2937] rounded px-3 py-2" />
+
+            </div>
+
+            <div class="sm:col-span-2 flex justify-center mt-4">
+
+                <button type="submit" id="generateInvoiceBtn"
+
+                    class="bg-[#1f2937] text-white px-6 py-3 rounded shadow hover:bg-[#374151] transition font-semibold">
+
+                    Generar Factura
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+
+
+
+    <div id="factura-container"
+
+        class="hidden w-full max-w-3xl bg-white p-6 rounded-xl shadow-md mt-6 flex flex-col items-center">
+
+        <h2 class="text-2xl font-bold mb-4 text-[#1f2937]">Previsualización de Factura</h2>
+
+        <div id="factura-preview" class="w-full mb-6">
+
+
+
+        </div>
+
+        <div class="factura-actions flex gap-4">
+
+            <button id="downloadPdfBtn"
+
+                class="bg-[#1f2937] text-white px-6 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+
+                Descargar Factura PDF
+
+            </button>
+
+            <button id="newCalculationBtn"
+
+                class="bg-[#1f2937] text-white px-6 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+
+                Nuevo Cálculo
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <div id="historial-container" class="max-w-3xl w-full p-6 mt-10 bg-white rounded-xl shadow-md">
+
+        <h2 class="text-center text-2xl font-bold mb-6 text-[#1f2937]">Historial de facturacion</h2>
+
+
+
+        <form id="filtroHistorial"
+
+            class="flex flex-wrap gap-2 items-center justify-start w-full max-w-5xl mx-auto mb-4">
+
+            <input type="date" id="filtroFechaDesde" class="border border-[#1f2937] rounded px-3 py-2 w-full sm:w-auto"
+
+                placeholder="Desde" />
+
+            <input type="date" id="filtroFechaHasta" class="border border-[#1f2937] rounded px-3 py-2 w-full sm:w-auto"
+
+                placeholder="Hasta" />
+
+            <input type="text" id="filtroCartaPorte" class="border border-[#1f2937] rounded px-3 py-2 w-full sm:w-auto"
+
+                placeholder="N° Carta de Porte" />
+
+            <button type="submit"
+
+                class="bg-[#1f2937] text-white px-5 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+
+                Buscar
+
+            </button>
+
+            <button type="button" id="limpiarFiltros"
+
+                class="bg-[#1f2937] text-white px-5 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+
+                Limpiar
+
+            </button>
+
+            <button type="button" id="verTodasFacturas"
+
+                class="bg-[#1f2937] text-white px-5 py-2 rounded shadow hover:bg-[#374151] transition font-semibold">
+
+                Todas las facturas
+
+            </button>
+
+        </form>
+
+
+
+        <div class="tabla-scroll-wrapper overflow-x-auto">
+
+            <table class="w-full text-left border-collapse border border-[#1f2937]">
+
+                <thead class="bg-[#1f2937] text-white">
+
+                    <tr>
+
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Fecha</th>
+
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">N°</th>
+
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap ">Producto</th>
+
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap ">Kilos</th>
+
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Precio</th>
+
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Descuento</th>
+
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Impuesto</th>
+
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap">Total</th>
+
+                        <th class="border border-[#1f2937] px-3 py-2 whitespace-nowrap"></th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="tablaHistorialBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="js/main.js"></script>
+
+
+
+</body>
+
+
+
+</html>
+
+
+JS : 
+document.addEventListener("DOMContentLoaded", function () {
+
+    const compraForm = document.getElementById("compraForm");
+
+    const facturaContainer = document.getElementById("factura-container");
+
+    const facturaPreview = document.getElementById("factura-preview");
+
+    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+
+    const newCalculationBtn = document.getElementById("newCalculationBtn");
+
+
+
+    const today = new Date();
+
+    const yyyy = today.getFullYear();
+
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+
+    const dd = String(today.getDate()).padStart(2, '0');
+
+    document.getElementById("fecha").value = `${yyyy}-${mm}-${dd}`;
+
+
+
+
+
+    function showStatusMessage(message, type = "info") {
+
+        let statusDiv = document.getElementById("statusMessage");
+
+        if (!statusDiv) {
+
+            statusDiv = document.createElement("div");
+
+            statusDiv.id = "statusMessage";
+
+            document.body.appendChild(statusDiv);
+
+        }
+
+
+
+        statusDiv.textContent = message;
+
+        statusDiv.className = "";
+
+        statusDiv.classList.add("show");
+
+
+
+        if (type === "error") {
+
+            statusDiv.classList.add("error");
+
+        } else if (type === "success") {
+
+            statusDiv.classList.add("success");
+
+        } else {
+
+            statusDiv.classList.add("info");
+
+        }
+
+
+
+        statusDiv.style.display = "block";
+
+
+
+        setTimeout(() => {
+
+            statusDiv.classList.remove("show");
+
+            setTimeout(() => {
+
+                statusDiv.style.display = "none";
+
+            }, 400);
+
+        }, 5000);
+
+    }
+
+
+
+    function hideStatusMessage() {
+
+        const statusDiv = document.getElementById("statusMessage");
+
+        if (statusDiv) {
+
+            statusDiv.classList.remove("show");
+
+            setTimeout(() => {
+
+                statusDiv.style.display = "none";
+
+            }, 400);
+
+        }
+
+    }
+
+
+
+    // Historial
+
+    function guardarFacturaEnHistorial(factura) {
+
+        const historial = JSON.parse(localStorage.getItem('historialFacturas')) || [];
+
+        historial.push(factura);
+
+        localStorage.setItem('historialFacturas', JSON.stringify(historial));
+
+    }
+
+
+
+    function cargarHistorial() {
+
+        return JSON.parse(localStorage.getItem('historialFacturas')) || [];
+
+    }
+
+
+
+function renderizarHistorial(facturas) {
+
+    const tbody = document.getElementById('tablaHistorialBody');
+
+    tbody.innerHTML = '';
+
+
+
+    if (facturas.length === 0) {
+
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center p-4">No se encontraron facturas</td></tr>`;
+
+        return;
+
+    }
+
+
+
+    facturas.forEach(factura => {
+
+        const tr = document.createElement('tr');
+
+        tr.classList.add('border-b', 'border-[#b89b5e]');
+
+
+
+        tr.innerHTML = `
+
+            <td class="border border-[#b89b5e] px-3 py-1 whitespace-nowrap">${factura.fecha}</td>
+
+            <td class="border border-[#b89b5e] px-3 py-1 whitespace-nowrap">${factura.cartaPorte}</td>
+
+            <td class="border border-[#b89b5e] px-3 py-1 whitespace-nowrap">${factura.producto}</td>
+
+            <td class="border border-[#b89b5e] px-3 py-1 whitespace-nowrap">${factura.kilos.toLocaleString('es-AR')}</td>
+
+            <td class="border border-[#b89b5e] px-3 py-1 whitespace-nowrap">$${factura.precio.toFixed(2)}</td>
+
+            <td class="border border-[#b89b5e] px-3 py-1 whitespace-nowrap">${factura.descuento}%</td>
+
+            <td class="border border-[#b89b5e] px-3 py-1 whitespace-nowrap">${factura.impuesto}%</td>
+
+            <td class="border border-[#b89b5e] px-3 py-1 whitespace-nowrap">$${factura.totalFinal.toFixed(2)}</td>
+
+            <td class="border border-[#b89b5e] px-3 py-1 whitespace-nowrap text-center">
+
+                <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded eliminar-btn transition duration-200" data-carta="${factura.cartaPorte}">
+
+    Eliminar
+
+</button>
+
+            </td>
+
+        `;
+
+        tbody.appendChild(tr);
+
+    });
+
+
+
+document.querySelectorAll('.eliminar-btn').forEach(btn => {
+
+    btn.addEventListener('click', function () {
+
+        const carta = this.getAttribute('data-carta');
+
+
+
+Swal.fire({
+
+    title: '¿Estás seguro?',
+
+    text: `Vas a eliminar la factura N° ${carta}`,
+
+    icon: 'warning',
+
+    showCancelButton: true,
+
+    confirmButtonColor: '#c19a43',
+
+    cancelButtonColor: '#d33',
+
+    confirmButtonText: 'Sí, eliminar',
+
+    cancelButtonText: 'Cancelar',
+
+    customClass: {
+
+        popup: 'my-responsive-popup'
+
+    }
+
+})
+
+.then((result) => {
+
+    if (result.isConfirmed) {
+
+        eliminarFactura(carta);
+
+
+
+        Swal.fire({
+
+       title: '🗑️ Eliminada',
+
+  text: `La factura fue eliminada correctamente.`,
+
+  icon: 'success',
+
+  confirmButtonColor: '#c19a43',
+
+  customClass: {
+
+    popup: 'my-responsive-popup'
+
+            }
+
+        });
+
+    }
+
+});
+
+    });
+
+});
+
+}
+
+
+
+    function filtrarHistorial(event) {
+
+        event.preventDefault();
+
+
+
+        const desde = document.getElementById('filtroFechaDesde').value;
+
+        const hasta = document.getElementById('filtroFechaHasta').value;
+
+        const carta = document.getElementById('filtroCartaPorte').value.trim().toLowerCase();
+
+
+
+        let facturas = cargarHistorial();
+
+
+
+        if (desde) {
+
+            facturas = facturas.filter(f => f.fecha >= desde);
+
+        }
+
+        if (hasta) {
+
+            facturas = facturas.filter(f => f.fecha <= hasta);
+
+        }
+
+        if (carta) {
+
+            facturas = facturas.filter(f => f.cartaPorte.toLowerCase().includes(carta));
+
+        }
+
+
+
+        renderizarHistorial(facturas);
+
+    }
+
+
+
+    function limpiarFiltros() {
+
+        document.getElementById('filtroFechaDesde').value = '';
+
+        document.getElementById('filtroFechaHasta').value = '';
+
+        document.getElementById('filtroCartaPorte').value = '';
+
+        renderizarHistorial([]);
+
+    }
+
+
+
+    compraForm.addEventListener("submit", function (e) {
+
+        e.preventDefault();
+
+
+
+        const fecha = document.getElementById("fecha").value;
+
+        const cartaPorte = document.getElementById("cartaPorte").value.trim();
+
+        const producto = document.getElementById("producto").value;
+
+        const kilos = parseFloat(document.getElementById("kilos").value);
+
+        const precio = parseFloat(document.getElementById("precio").value);
+
+        const descuento = parseFloat(document.getElementById("descuento").value) || 0;
+
+        const impuesto = parseFloat(document.getElementById("impuesto").value) || 0;
+
+
+
+        if (isNaN(kilos) || isNaN(precio) || kilos <= 0 || precio <= 0) {
+
+            showStatusMessage("Por favor, ingrese valores válidos y positivos para Kilogramos y Precio por Kilo.", "error");
+
+            return;
+
+        }
+
+
+
+        const subtotal = kilos * precio;
+
+        const descuentoMonto = subtotal * (descuento / 100);
+
+        const impuestoMonto = subtotal * (impuesto / 100);
+
+        const totalFinal = subtotal - descuentoMonto + impuestoMonto;
+
+
+
+        facturaPreview.innerHTML = `
+
+            <div style="padding: 20px; font-family: sans-serif; border: 1px solid #000; margin: 0 auto; max-width: 600px;">
+
+                <h2 style="text-align: center;">Comprobante de Compra – No Fiscal</h2>
+
+                <p><strong>Fecha:</strong> ${fecha}</p>
+
+                <p><strong>N° Carta de Porte:</strong> ${cartaPorte}</p>
+
+                <hr style="border-top: 1px dashed #ccc; margin: 10px 0;">
+
+                <p><strong>Producto:</strong> ${producto}</p>
+
+                <p><strong>Kilogramos:</strong> ${kilos.toLocaleString('es-AR', { maximumFractionDigits: 2 })} kg</p>
+
+                <p><strong>Precio por kilo:</strong> $${precio.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+
+                <p><strong>Subtotal:</strong> $${subtotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+
+                <p><strong>Descuento (${descuento}%):</strong> -$${descuentoMonto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+
+                <p><strong>Impuesto (${impuesto}%):</strong> +$${impuestoMonto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+
+                <hr style="border-top: 1px solid #000; margin: 10px 0;">
+
+                <h3 style="text-align: right;"><strong>Total Final:</strong> $${totalFinal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+
+            </div>
+
+        `;
+
+
+
+        guardarFacturaEnHistorial({
+
+            fecha,
+
+            cartaPorte,
+
+            producto,
+
+            kilos,
+
+            precio,
+
+            descuento,
+
+            impuesto,
+
+            totalFinal
+
+        });
+
+
+
+        facturaContainer.style.display = "flex";
+
+        compraForm.style.display = "none";
+
+
+
+        renderizarHistorial(cargarHistorial());
+
+    });
+
+
+
+    downloadPdfBtn.addEventListener("click", function () {
+
+        const cartaPorte = document.getElementById("cartaPorte").value.trim();
+
+        if (!cartaPorte) {
+
+            showStatusMessage("Debe ingresar el N° de Carta de Porte para descargar la factura.", "error");
+
+            return;
+
+        }
+
+
+
+        facturaContainer.style.display = "flex";
+
+        setTimeout(() => {
+
+            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+
+                console.error("Error: La librería jsPDF no está cargada o no está definida correctamente.");
+
+                showStatusMessage("Error: La librería jsPDF no está cargada. Revise la consola del navegador.", "error");
+
+                return;
+
+            }
+
+
+
+            const { jsPDF } = window.jspdf;
+
+            html2canvas(facturaPreview, {
+
+                scale: 2,
+
+                useCORS: true
+
+            }).then(canvas => {
+
+                const imgData = canvas.toDataURL("image/png");
+
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+
+
+                const imgWidth = 210;
+
+                const pageHeight = 297;
+
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+
+                let heightLeft = imgHeight;
+
+                let position = 0;
+
+
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+
+                heightLeft -= pageHeight;
+
+
+
+                while (heightLeft >= 0) {
+
+                    position = heightLeft - imgHeight;
+
+                    pdf.addPage();
+
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+
+                    heightLeft -= pageHeight;
+
+                }
+
+
+
+                pdf.save(`factura-${cartaPorte}.pdf`);
+
+                showStatusMessage("Factura descargada correctamente.", "success");
+
+            }).catch(error => {
+
+                console.error("Error al generar el PDF con html2canvas:", error);
+
+                showStatusMessage("Hubo un error al generar el PDF. Por favor, inténtelo de nuevo.", "error");
+
+            });
+
+        }, 50);
+
+    });
+
+
+
+    newCalculationBtn.addEventListener("click", function () {
+
+        compraForm.reset();
+
+        document.getElementById("fecha").value = `${yyyy}-${mm}-${dd}`;
+
+        facturaContainer.style.display = "none";
+
+        compraForm.style.display = "grid";
+
+        facturaPreview.innerHTML = '';
+
+        hideStatusMessage();
+
+    });
+
+
+
+    document.getElementById('filtroHistorial').addEventListener('submit', filtrarHistorial);
+
+    document.getElementById('limpiarFiltros').addEventListener('click', limpiarFiltros);
+
+
+
+    document.getElementById('verTodasFacturas').addEventListener('click', function () {
+
+        const todas = cargarHistorial();
+
+        if (todas.length === 0) {
+
+            showStatusMessage("No hay facturas guardadas para mostrar.", "info");
+
+        }
+
+        renderizarHistorial(todas);
+
+    });
+
+
+
+    renderizarHistorial([]);
+
+
+
+    function eliminarFactura(cartaPorte) {
+
+    let historial = cargarHistorial();
+
+    const nuevoHistorial = historial.filter(f => f.cartaPorte !== cartaPorte);
+
+    localStorage.setItem('historialFacturas', JSON.stringify(nuevoHistorial));
+
+    renderizarHistorial(nuevoHistorial);
+
+    showStatusMessage("Factura eliminada correctamente.", "success");
+
+}
+
+
+
+});
+
+
+css
+
+
+body,
+
+input,
+
+select,
+
+button {
+
+    font-family: 'Inter', sans-serif;
+
+    background-color: #f5f0e6;
+
+    color: #4b3b22;
+
+    margin: 0;
+
+    padding: 0;
+
+    box-sizing: border-box;
+
+}
+
+
+
+#app-container {
+
+    max-width: 480px;
+
+    margin: 2rem auto;
+
+    background: #f5f0e6;
+
+    padding: 2rem;
+
+    border-radius: 12px;
+
+    box-shadow: 0 8px 20px rgba(101, 67, 33, 0.2);
+
+    color: #4b3b22;
+
+}
+
+
+
+
+
+#app-container h1 {
+
+    text-align: center;
+
+    font-weight: 700;
+
+    font-size: 1.9rem;
+
+    margin-bottom: 1.5rem;
+
+    color: #594f30;
+
+    text-shadow: 1px 1px 0 rgba(89, 79, 48, 0.3);
+
+}
+
+
+
+#statusMessage {
+
+    position: fixed;
+
+    top: 20px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    padding: 10px 20px;
+
+    border-radius: 5px;
+
+    z-index: 1000;
+
+    color: white;
+
+    font-weight: bold;
+
+    text-align: center;
+
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: opacity 0.3s ease;
+
+}
+
+
+
+#statusMessage.show {
+
+    opacity: 1;
+
+    pointer-events: auto;
+
+}
+
+
+
+#statusMessage.error {
+
+    background-color: #dc3545;
+
+}
+
+
+
+#statusMessage.success {
+
+    background-color: #28a745;
+
+}
+
+
+
+#statusMessage.info {
+
+    background-color: #007bff;
+
+}
+
+
+
+/* Formularios */
+
+.form-group {
+
+    display: flex;
+
+    flex-direction: column;
+
+    margin-bottom: 1rem;
+
+}
+
+
+
+.form-group label {
+
+    font-weight: 600;
+
+    margin-bottom: 0.35rem;
+
+    color: #3a3a2d;
+
+}
+
+
+
+
+
+
+
+input[type="date"],
+
+input[type="text"],
+
+input[type="number"],
+
+select {
+
+    padding: 0.5rem 0.75rem;
+
+    border: 2px solid #b89b5e;
+
+    border-radius: 8px;
+
+    font-size: 1rem;
+
+    color: #4b3b22;
+
+    background-color: #fefcf6;
+
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+}
+
+
+
+input[type="date"]:focus,
+
+input[type="text"]:focus,
+
+input[type="number"]:focus,
+
+select:focus {
+
+    border-color: #4a5d23;
+
+    box-shadow: 0 0 6px #4a5d23aa;
+
+    outline: none;
+
+}
+
+
+
+
+
+button {
+
+    background-color: #c19a43;
+
+    border: none;
+
+    color: #ffffff;
+
+    font-weight: 700;
+
+    font-size: 1.1rem;
+
+    padding: 0.75rem 1.8rem;
+
+    border-radius: 14px;
+
+    cursor: pointer;
+
+    box-shadow: 0 6px 14px rgba(193, 154, 67, 0.8);
+
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+
+    align-self: center;
+
+    user-select: none;
+
+}
+
+
+
+button:hover,
+
+button:focus {
+
+    background-color: #4a5d23;
+
+    box-shadow: 0 8px 20px rgba(74, 93, 35, 0.9);
+
+    color: #ffffff;
+
+    outline: none;
+
+}
+
+
+
+button:active {
+
+    box-shadow: 0 3px 8px rgba(74, 93, 35, 0.7);
+
+}
+
+
+
+
+
+.factura-actions button {
+
+    width: 160px;
+
+    background-color: #594f30;
+
+    box-shadow: 0 5px 10px rgba(89, 79, 48, 0.7);
+
+    color: #ffffff;
+
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+
+    user-select: none;
+
+}
+
+
+
+.factura-actions button:hover,
+
+.factura-actions button:focus {
+
+    background-color: #4a5d23;
+
+    box-shadow: 0 6px 14px rgba(74, 93, 35, 0.9);
+
+    outline: none;
+
+}
+
+
+
+.factura-actions button:active {
+
+    box-shadow: 0 3px 8px rgba(74, 93, 35, 0.7);
+
+}
+
+
+
+
+
+#compraForm {
+
+    display: grid;
+
+    grid-template-columns: 1fr;
+
+    gap: 1rem;
+
+}
+
+
+
+
+
+.form-actions {
+
+    margin-top: 1rem;
+
+    display: flex;
+
+    justify-content: center;
+
+}
+
+
+
+
+
+#factura-container {
+
+    max-width: 600px;
+
+    margin: 2rem auto;
+
+    padding: 1.5rem 2rem;
+
+    background-color: #fefcf6;
+
+    /* beige */
+
+    border-radius: 14px;
+
+    box-shadow: 0 8px 18px rgba(101, 67, 33, 0.25);
+
+    color: #4b3b22;
+
+    display: none;
+
+    flex-direction: column;
+
+    gap: 1rem;
+
+}
+
+
+
+#factura-container h2 {
+
+    text-align: center;
+
+    font-weight: 700;
+
+    font-size: 1.8rem;
+
+    color: #594f30;
+
+    text-shadow: 1px 1px 0 rgba(89, 79, 48, 0.3);
+
+    margin-bottom: 0.75rem;
+
+}
+
+
+
+
+
+#factura-preview>div {
+
+    border: 2px solid #b89b5e;
+
+    padding: 1.5rem 2rem;
+
+    border-radius: 12px;
+
+    background-color: #fffbe6;
+
+    box-shadow: inset 0 0 10px #b89b5e55;
+
+    font-size: 1rem;
+
+    color: #4b3b22;
+
+    line-height: 1.5;
+
+}
+
+
+
+#factura-preview p {
+
+    margin: 0.4rem 0;
+
+}
+
+
+
+#factura-preview hr {
+
+    border-color: #b89b5e88;
+
+}
+
+
+
+
+
+#factura-preview h3 {
+
+    font-weight: 700;
+
+    color: #4a5d23;
+
+}
+
+
+
+
+
+.factura-actions {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 1rem;
+
+    margin-top: 1rem;
+
+}
+
+
+
+
+
+
+
+#statusMessage {
+
+    font-size: 1.05rem;
+
+    letter-spacing: 0.02em;
+
+    user-select: none;
+
+    font-family: 'Inter', sans-serif;
+
+}
+
+
+
+
+
+.tabla-scroll-wrapper {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+}
+
+
+
+
+
+@media (max-width: 480px) {
+
+
+
+    #app-container,
+
+    #factura-container {
+
+        margin: 1rem;
+
+        padding: 1.5rem;
+
+        max-width: 100%;
+
+    }
+
+
+
+    #compraForm {
+
+        grid-template-columns: 1fr;
+
+        gap: 0.8rem;
+
+    }
+
+
+
+    #filtroHistorial {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+    }
+
+
+
+    #filtroHistorial input,
+
+    #filtroHistorial button {
+
+        width: 100%;
+
+    }
+
+
+
+    input[type="date"],
+
+    input[type="text"],
+
+    input[type="number"],
+
+    select {
+
+        width: 100%;
+
+    }
+
+
+
+    button {
+
+        width: 100%;
+
+        padding: 0.85rem 1rem;
+
+        font-size: 1.05rem;
+
+    }
+
+
+
+    .factura-actions {
+
+        flex-direction: column;
+
+        gap: 0.8rem;
+
+    }
+
+
+
+    .factura-actions button {
+
+        width: 100%;
+
+    }
+
+}
+
+
+
+
+
+@media (min-width: 600px) {
+
+    #compraForm {
+
+        grid-template-columns: repeat(2, 1fr);
+
+        gap: 1.5rem 2rem;
+
+    }
+
+
+
+    .form-group label {
+
+        margin-bottom: 0.5rem;
+
+    }
+
+
+
+    .factura-actions button {
+
+        width: 160px;
+
+        padding: 0.75rem 1.8rem;
+
+        font-size: 1.1rem;
+
+    }
+
+}
+
+
+
+
+
+
+
+
+
+@media (min-width: 1024px) {
+
+
+
+    #app-container,
+
+    #factura-container {
+
+        max-width: 600px;
+
+        padding: 3rem 4rem;
+
+        margin: 3rem auto;
+
+    }
+
+
+
+    #compraForm {
+
+        grid-template-columns: 1fr;
+
+        gap: 1.5rem;
+
+    }
+
+
+
+    .form-group label {
+
+        font-size: 1.1rem;
+
+        margin-bottom: 0.6rem;
+
+    }
+
+
+
+    input[type="date"],
+
+    input[type="text"],
+
+    input[type="number"],
+
+    select {
+
+        font-size: 1.1rem;
+
+        padding: 0.75rem 1rem;
+
+    }
+
+
+
+    button {
+
+        font-size: 1.2rem;
+
+        padding: 1rem 2.5rem;
+
+    }
+
+
+
+    .factura-actions button {
+
+        width: 180px;
+
+        font-size: 1.15rem;
+
+        padding: 0.9rem 2.2rem;
+
+    }
+
+
+
+    #factura-preview>div {
+
+        padding: 2rem 3rem;
+
+        font-size: 1.1rem;
+
+    }
+
+
+
+    #factura-container h2 {
+
+        font-size: 2.2rem;
+
+    }
+
+}
+
+
+
+.my-responsive-popup {
+
+    width: 90% !important;
+
+    max-width: 400px !important;
+
+    font-size: 1rem !important;
+
+}
+
+
+
+
+
+@media (max-width: 400px) {
+
+    .my-responsive-popup {
+
+        width: 95% !important;
+
+        font-size: 0.9rem !important;
+
+    }
+
+}
+
+
+
+
+
+.my-responsive-popup .swal2-title {
+
+    font-size: 1.3rem !important;
+
+}
+
+
+
+@media (max-width: 400px) {
+
+    .my-responsive-popup .swal2-title {
+
+        font-size: 1.1rem !important;
+
+    }
+
+}
+
+
+
+
+
+.my-responsive-popup .swal2-html-container {
+
+    font-size: 1rem !important;
+
+}
+
+
+
+@media (max-width: 400px) {
+
+    .my-responsive-popup .swal2-html-container {
+
+        font-size: 0.9rem !important;
+
+    }
+
+}
