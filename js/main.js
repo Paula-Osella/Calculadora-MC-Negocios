@@ -274,7 +274,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Reemplazamos la imagen del logo para el PDF (logo B)
         content = content.replace(
             // Imagen del logo en el pdf
-            `<img src="assets/img/logo-mc-negocios-fondo.png" alt="Logo para PDF" style="display: block; margin: 0 auto 20px auto; width: 600px; height: 350px;" />`
+            `<img src="assets/img/logo-mc-negocios-fondo.png" alt="Logo para PDF" style="display: block; margin: 0 auto 20px auto; width: 600px; height: 300px;" />`
         );
 
         const tempDiv = document.createElement('div');
