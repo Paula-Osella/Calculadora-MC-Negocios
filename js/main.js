@@ -10,6 +10,31 @@ document.addEventListener("DOMContentLoaded", function () {
     const sunIcon = document.getElementById("sun-icon");
     const moonIcon = document.getElementById("moon-icon");
 
+    // Formatear numero para los desimales 
+
+    const formatNumberInput = (inputElement) => {
+        inputElement.addEventListener("input", function () {
+            // Eliminar todos los caracteres que no sean números o coma/punto
+            let raw = this.value.replace(/\./g, "").replace(",", ".");
+            const num = parseFloat(raw);
+            if (!isNaN(num)) {
+                this.value = num.toLocaleString("es-AR", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                });
+            }
+        });
+
+        inputElement.addEventListener("focus", function () {
+            this.value = this.value.replace(/\./g, "").replace(",", ".");
+        });
+    };
+
+    // Aplicar a todos los inputs
+    ["kilos", "precio", "descuento", "impuesto"].forEach((id) =>
+        formatNumberInput(document.getElementById(id))
+    );
+
     // --- Setear fecha actual por defecto ---
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -198,13 +223,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const fecha = document.getElementById("fecha").value;
         const cartaPorte = document.getElementById("cartaPorte").value.trim();
         const producto = document.getElementById("producto").value;
-        const kilos = parseFloat(document.getElementById("kilos").value);
-        const precio = parseFloat(document.getElementById("precio").value);
-        const descuento = parseFloat(document.getElementById("descuento").value) || 0;
-        const impuesto = parseFloat(document.getElementById("impuesto").value) || 0;
+
+        const kilos = parseFloat(document.getElementById("kilos").value.replace(/\./g, "").replace(",", "."));
+        const precio = parseFloat(document.getElementById("precio").value.replace(/\./g, "").replace(",", "."));
+        const descuento = parseFloat(document.getElementById("descuento").value.replace(/\./g, "").replace(",", ".")) || 0;
+        const impuesto = parseFloat(document.getElementById("impuesto").value.replace(/\./g, "").replace(",", ".")) || 0;
 
         if (isNaN(kilos) || isNaN(precio) || kilos <= 0 || precio <= 0) {
-            showStatusMessage("Por favor, ingrese valores válidos y positivos para Kilogramos y Precio por Kilo.", "error");
+            alert("Por favor, ingrese valores válidos y positivos para Kilogramos y Precio por Kilo.");
             return;
         }
 
@@ -215,20 +241,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Modificación del PDF monocromático
         facturaPreview.innerHTML = `
-            <img src="assets/img/logo-mc-negocios.png" alt="Logo mc negocios" style="display: block; margin: 0 auto 20px auto; width: 100%; height: auto background-color: #1f2937"/>
-            <div style="padding: 20px; font-family: 'Inter', sans-serif; border: 1px solid black; margin: 0 auto; max-width: 600px; background-color: white; border-radius: 0; box-shadow: none; color: black;">
-                <h2 style="text-align: center; font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem; color: black;">Comprobante de Compra – No Fiscal</h2>
-                <p style="margin-bottom: 0.5rem; color: black;"><strong>Fecha:</strong> ${fecha}</p>
-                <p style="margin-bottom: 0.5rem; color: black;"><strong>N° Carta de Porte:</strong> ${cartaPorte}</p>
-                <hr style="border-top: 1px solid black; margin: 10px 0;">
-                <p style="margin-bottom: 0.5rem; color: black;"><strong>Producto:</strong> ${producto}</p>
-                <p style="margin-bottom: 0.5rem; color: black;"><strong>Kilogramos:</strong> ${kilos.toLocaleString('es-AR', { maximumFractionDigits: 2 })} kg</p>
-                <p style="margin-bottom: 0.5rem; color: black;"><strong>Precio por kilo:</strong> $${precio.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <p style="margin-bottom: 0.5rem; color: black;"><strong>Subtotal:</strong> $${subtotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <p style="margin-bottom: 0.5rem; color: black;"><strong>Descuento (${descuento}%):</strong> -$${descuentoMonto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <p style="margin-bottom: 0.5rem; color: black;"><strong>Impuesto (${impuesto}%):</strong> +$${impuestoMonto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <hr style="border-top: 1px solid black; margin: 10px 0;">
-                <h3 style="text-align: right; font-size: 1.5rem; font-weight: 700; color: black;"><strong>Total Final:</strong> $${totalFinal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+            <img src="assets/img/logo-mc-negocios-fondo.png" alt="Logo mc negocios" style="display: block; margin: 0 auto 20px auto; width: 600px; height: 300px; background-color: #1f2937"/>
+            <div style="padding: 20px; font-family: 'Inter', sans-serif; border: 1px solid black; margin: 0 auto; max-width: 600px; background-color: white; color: black;">
+                <h2 style="text-align: center; font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem; color: black">Comprobante de Compra – No Fiscal</h2>
+                <p><strong>Fecha:</strong> ${fecha}</p>
+                <p><strong>N° Carta de Porte:</strong> ${cartaPorte}</p>
+                <hr>
+                <p><strong>Producto:</strong> ${producto}</p>
+                <p><strong>Kilogramos:</strong> ${kilos.toLocaleString("es-AR", { maximumFractionDigits: 2 })} kg</p>
+                <p><strong>Precio por kilo:</strong> $${precio.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+                <p><strong>Subtotal:</strong> $${subtotal.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+                <p><strong>Descuento (${descuento}%):</strong> -$${descuentoMonto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+                <p><strong>Impuesto (${impuesto}%):</strong> +$${impuestoMonto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+                <hr>
+                <h3 style="text-align: right;"><strong>Total Final:</strong> $${totalFinal.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</h3>
             </div>
         `;
 
@@ -270,12 +296,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Obtenemos el contenido del preview
         let content = facturaPreview.innerHTML;
-
-        // Reemplazamos la imagen del logo para el PDF (logo B)
-        content = content.replace(
-            // Imagen del logo en el pdf
-            `<img src="assets/img/logo-mc-negocios-fondo.png" alt="Logo para PDF" style="display: block; margin: 0 auto 20px auto; width: 600px; height: 300px;" />`
-        );
 
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = content;
@@ -419,4 +439,5 @@ document.addEventListener("DOMContentLoaded", function () {
     // Render inicial
     renderizarHistorial(cargarHistorial());
 });
+
 
