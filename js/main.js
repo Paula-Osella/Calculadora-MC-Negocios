@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("fecha").value = `${yyyy}-${mm}-${dd}`;
 
     // -------------------------------
-    //       MODO OSCURO (THEME)
+    //         MODO OSCURO (THEME)
     // -------------------------------
     function applyTheme(theme) {
         if (theme === 'dark') {
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // -------------------------------
-    //       MENSAJES DE ESTADO
+    //         MENSAJES DE ESTADO
     // -------------------------------
     function showStatusMessage(message, type = "info") {
         let statusDiv = document.getElementById("statusMessage");
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // -------------------------------
-    //       HISTORIAL DE FACTURAS
+    //         HISTORIAL DE FACTURAS
     // -------------------------------
     function guardarFacturaEnHistorial(factura) {
         const historial = cargarHistorial();
@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let historial = JSON.parse(localStorage.getItem('historialFacturas')) || [];
         historial = historial.map(factura => {
             if (!factura.id) {
-                factura.id = Date.now() + Math.random(); 
+                factura.id = Date.now() + Math.random();
             }
             return factura;
         });
@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <td class="border px-3 py-1 whitespace-nowrap ">${factura.kilos.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
                 <td class="border px-3 py-1 whitespace-nowrap">$${factura.precio.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td class="border px-3 py-1 whitespace-nowrap">${factura.descuento}%</td>
-                <td class="border px-3 py-1 whitespace-nowrap">${factura.flete}%</td>
+                <td class="border px-3 py-1 whitespace-nowrap">$${factura.flete.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td class="border px-3 py-1 whitespace-nowrap">$${factura.totalFinal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td class="border px-3 py-1 whitespace-nowrap text-center">
                     <button class="eliminar-btn" data-id="${factura.id}" data-carta="${factura.cartaPorte}">
@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (target) {
                 const facturaId = parseFloat(target.getAttribute('data-id'));
                 const carta = target.getAttribute('data-carta');
-                
+
                 Swal.fire({
                     title: '¿Estás seguro?',
                     text: `Vas a eliminar la factura N° ${carta || 'sin número'}`,
@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // -------------------------------
-    //       EVENTOS DEL FORMULARIO
+    //         EVENTOS DEL FORMULARIO
     // -------------------------------
     compraForm.addEventListener("submit", function (e) {
         e.preventDefault();
@@ -233,20 +233,25 @@ document.addEventListener("DOMContentLoaded", function () {
         const cartaPorte = document.getElementById("cartaPorte").value.trim();
         const producto = document.getElementById("producto").value;
 
+        // Limpiamos los valores de los inputs para el cálculo
         const kilos = parseFloat(document.getElementById("kilos").value.replace(/\./g, "").replace(",", "."));
         const precio = parseFloat(document.getElementById("precio").value.replace(/\./g, "").replace(",", "."));
         const descuento = parseFloat(document.getElementById("descuento").value.replace(/\./g, "").replace(",", ".")) || 0;
+        // Obtenemos el flete como un valor fijo, no como un porcentaje
         const flete = parseFloat(document.getElementById("flete").value.replace(/\./g, "").replace(",", ".")) || 0;
 
         if (isNaN(kilos) || isNaN(precio) || kilos <= 0 || precio <= 0) {
-            alert("Por favor, ingrese valores válidos y positivos para Kilogramos y Precio por Kilo.");
+            // Reemplazamos alert() con una función de mensaje de estado para mejorar la experiencia de usuario
+            showStatusMessage("Por favor, ingrese valores válidos y positivos para Kilogramos y Precio por Kilo.", "error");
             return;
         }
 
+        // --- Lógica de cálculo actualizada ---
         const subtotal = kilos * precio;
+        // Se calcula el descuento como un porcentaje del subtotal
         const descuentoMonto = subtotal * (descuento / 100);
-        const fleteMonto = subtotal * (flete / 100);
-        const totalFinal = subtotal - descuentoMonto - fleteMonto;
+        // El flete se toma como un monto fijo para restar
+        const totalFinal = subtotal - descuentoMonto - flete;
 
         facturaPreview.innerHTML = `
             <img src="assets/img/logo-mc-negocios-fondo.png" alt="Logo mc negocios" style="display: block; margin: 0 auto 20px auto; width: 600px; height: 300px; background-color: #1f2937"/>
@@ -260,7 +265,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 <p><strong>Precio por kilo:</strong> $${precio.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
                 <p><strong>Subtotal:</strong> $${subtotal.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
                 <p><strong>Descuento (${descuento}%):</strong> -$${descuentoMonto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
-                <p><strong>Flete (${flete}%):</strong> -$${fleteMonto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+                <!-- El flete ahora se muestra como un monto fijo, no como un porcentaje -->
+                <p><strong>Flete:</strong> -$${flete.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
                 <hr>
                 <h3 style="text-align: right;"><strong>Total Final:</strong> $${totalFinal.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</h3>
             </div>
@@ -422,7 +428,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // -------------------------------
-    //       EVENTOS DE FILTROS
+    //         EVENTOS DE FILTROS
     // -------------------------------
     document.getElementById('filtroHistorial').addEventListener('submit', filtrarHistorial);
     document.getElementById('limpiarFiltros').addEventListener('click', limpiarFiltros);
