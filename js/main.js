@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const facturaContainer = document.getElementById("factura-container");
     const facturaPreview = document.getElementById("factura-preview");
     const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+    const sharePdfBtn = document.getElementById("sharePdfBtn"); // Nuevo botón para compartir
     const newCalculationBtn = document.getElementById("newCalculationBtn");
     const themeToggleBtn = document.getElementById("theme-toggle");
     const sunIcon = document.getElementById("sun-icon");
@@ -212,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const impuestoMonto = subtotal * (impuesto / 100);
         const totalFinal = subtotal - descuentoMonto + impuestoMonto;
 
-        // ***** INICIO DE LA MODIFICACIÓN PARA EL PDF MONOCROMÁTICO *****
+        // Modificación del PDF monocromático
         facturaPreview.innerHTML = `
             <div style="padding: 20px; font-family: 'Inter', sans-serif; border: 1px solid black; margin: 0 auto; max-width: 600px; background-color: white; border-radius: 0; box-shadow: none; color: black;">
                 <h2 style="text-align: center; font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem; color: black;">Comprobante de Compra – No Fiscal</h2>
@@ -229,7 +230,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 <h3 style="text-align: right; font-size: 1.5rem; font-weight: 700; color: black;"><strong>Total Final:</strong> $${totalFinal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
             </div>
         `;
-        // ***** FIN DE LA MODIFICACIÓN *****
 
         guardarFacturaEnHistorial({
             fecha,
@@ -248,6 +248,7 @@ document.addEventListener("DOMContentLoaded", function () {
         renderizarHistorial(cargarHistorial());
     });
 
+    // Evento para descargar el PDF (funcionalidad original)
     downloadPdfBtn.addEventListener("click", function () {
         const cartaPorte = document.getElementById("cartaPorte").value.trim();
         if (!cartaPorte) {
@@ -266,14 +267,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const { jsPDF } = window.jspdf;
 
-            // ***** INICIO DE LA MODIFICACIÓN PARA LA SOLUCIÓN DEL PDF *****
             const content = facturaPreview.innerHTML;
 
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = content;
-            tempDiv.style.width = '800px'; // Ancho fijo para una calidad óptima
+            tempDiv.style.width = '800px';
             tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px'; // Lo movemos fuera de la pantalla
+            tempDiv.style.left = '-9999px';
             document.body.appendChild(tempDiv);
             
             html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
@@ -299,20 +299,92 @@ document.addEventListener("DOMContentLoaded", function () {
                 pdf.save(`factura-${cartaPorte}.pdf`);
                 showStatusMessage("Factura descargada correctamente.", "success");
                 
-                // Eliminamos el div temporal después de la descarga
                 document.body.removeChild(tempDiv);
             }).catch(error => {
                 console.error("Error al generar el PDF:", error);
                 showStatusMessage("Hubo un error al generar el PDF.", "error");
-                // Aseguramos que el div temporal se elimine incluso en caso de error
                 if(tempDiv && tempDiv.parentNode) {
                     document.body.removeChild(tempDiv);
                 }
             });
-            // ***** FIN DE LA MODIFICACIÓN *****
 
         }, 50);
     });
+
+    // --- INICIO DE LA NUEVA FUNCIONALIDAD DE COMPARTIR ---
+    sharePdfBtn.addEventListener("click", async function () {
+        const cartaPorte = document.getElementById("cartaPorte").value.trim();
+        if (!cartaPorte) {
+            showStatusMessage("Debe ingresar el N° de Carta de Porte para compartir la factura.", "error");
+            return;
+        }
+
+        // Primero, verificamos si la Web Share API está disponible
+        if (!navigator.share) {
+            showStatusMessage("La función de compartir no es compatible con este navegador.", "error");
+            return;
+        }
+
+        facturaContainer.style.display = "flex";
+
+        try {
+            // Se usa el mismo proceso de html2canvas y jsPDF para obtener los datos del PDF
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = facturaPreview.innerHTML;
+            tempDiv.style.width = '800px';
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            document.body.appendChild(tempDiv);
+
+            const canvas = await html2canvas(tempDiv, { scale: 2, useCORS: true });
+            
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            
+            const imgData = canvas.toDataURL("image/png");
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            // Obtenemos el PDF como un Blob para poder compartirlo como archivo
+            const pdfBlob = pdf.output('blob');
+            const file = new File([pdfBlob], `factura-${cartaPorte}.pdf`, { type: 'application/pdf' });
+
+            // Ahora llamamos a la API de compartir con la información que queremos
+            await navigator.share({
+                files: [file],
+                title: `Factura ${cartaPorte}`,
+                text: `Adjunto la factura N° ${cartaPorte} generada.`,
+            });
+            
+            showStatusMessage("Factura compartida correctamente.", "success");
+        } catch (error) {
+            // Este catch se ejecuta si el usuario cancela la acción de compartir
+            if (error.name !== "AbortError") {
+                console.error("Error al compartir el PDF:", error);
+                showStatusMessage("Hubo un error al intentar compartir el PDF.", "error");
+            }
+        } finally {
+            // Aseguramos que el div temporal se elimine siempre
+            const tempDiv = document.querySelector('div[style*="left: -9999px"]');
+            if(tempDiv && tempDiv.parentNode) {
+                document.body.removeChild(tempDiv);
+            }
+        }
+    });
+    // --- FIN DE LA NUEVA FUNCIONALIDAD ---
 
     newCalculationBtn.addEventListener("click", function () {
         compraForm.reset();
