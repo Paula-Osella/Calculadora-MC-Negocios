@@ -377,7 +377,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 showStatusMessage("Hubo un error al intentar compartir el PDF.", "error");
             }
         } finally {
-            // Aseguramos que el div temporal se elimine siempre
             const tempDiv = document.querySelector('div[style*="left: -9999px"]');
             if(tempDiv && tempDiv.parentNode) {
                 document.body.removeChild(tempDiv);
