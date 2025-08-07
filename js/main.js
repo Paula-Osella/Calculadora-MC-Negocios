@@ -215,6 +215,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Modificación del PDF monocromático
         facturaPreview.innerHTML = `
+            <img src="assets/img/logo-mc-negocios.png" alt="Logo mc negocios" style="display: block; margin: 0 auto 20px auto; width: 100%; height: auto background-color: #1f2937"/>
             <div style="padding: 20px; font-family: 'Inter', sans-serif; border: 1px solid black; margin: 0 auto; max-width: 600px; background-color: white; border-radius: 0; box-shadow: none; color: black;">
                 <h2 style="text-align: center; font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem; color: black;">Comprobante de Compra – No Fiscal</h2>
                 <p style="margin-bottom: 0.5rem; color: black;"><strong>Fecha:</strong> ${fecha}</p>
@@ -250,66 +251,73 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Evento para descargar el PDF (funcionalidad original)
     downloadPdfBtn.addEventListener("click", function () {
-        const cartaPorte = document.getElementById("cartaPorte").value.trim();
-        if (!cartaPorte) {
-            showStatusMessage("Debe ingresar el N° de Carta de Porte para descargar la factura.", "error");
+    const cartaPorte = document.getElementById("cartaPorte").value.trim();
+    if (!cartaPorte) {
+        showStatusMessage("Debe ingresar el N° de Carta de Porte para descargar la factura.", "error");
+        return;
+    }
+
+    facturaContainer.style.display = "flex";
+
+    setTimeout(() => {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            console.error("Error: jsPDF no está definido.");
+            showStatusMessage("Error: jsPDF no está cargado.", "error");
             return;
         }
 
-        facturaContainer.style.display = "flex";
+        const { jsPDF } = window.jspdf;
 
-        setTimeout(() => {
-            if (!window.jspdf || !window.jspdf.jsPDF) {
-                console.error("Error: jsPDF no está definido.");
-                showStatusMessage("Error: jsPDF no está cargado.", "error");
-                return;
-            }
+        // Obtenemos el contenido del preview
+        let content = facturaPreview.innerHTML;
 
-            const { jsPDF } = window.jspdf;
+        // Reemplazamos la imagen del logo para el PDF (logo B)
+        content = content.replace(
+            // Imagen del logo en el pdf
+            `<img src="assets/img/logo-mc-negocios-fondo.png" alt="Logo para PDF" style="display: block; margin: 0 auto 20px auto; width: 600px; height: 350px;" />`
+        );
 
-            const content = facturaPreview.innerHTML;
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        tempDiv.style.width = '800px';
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        document.body.appendChild(tempDiv);
 
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = content;
-            tempDiv.style.width = '800px';
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            document.body.appendChild(tempDiv);
-            
-            html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
-                const imgData = canvas.toDataURL("image/png");
-                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-                const imgWidth = 210;
-                const pageHeight = 297;
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
 
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
                 pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
                 heightLeft -= pageHeight;
+            }
 
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
+            pdf.save(`factura-${cartaPorte}.pdf`);
+            showStatusMessage("Factura descargada correctamente.", "success");
 
-                pdf.save(`factura-${cartaPorte}.pdf`);
-                showStatusMessage("Factura descargada correctamente.", "success");
-                
+            document.body.removeChild(tempDiv);
+        }).catch(error => {
+            console.error("Error al generar el PDF:", error);
+            showStatusMessage("Hubo un error al generar el PDF.", "error");
+            if (tempDiv && tempDiv.parentNode) {
                 document.body.removeChild(tempDiv);
-            }).catch(error => {
-                console.error("Error al generar el PDF:", error);
-                showStatusMessage("Hubo un error al generar el PDF.", "error");
-                if(tempDiv && tempDiv.parentNode) {
-                    document.body.removeChild(tempDiv);
-                }
-            });
+            }
+        });
 
-        }, 50);
-    });
+    }, 50);
+});
 
     // --- INICIO DE LA NUEVA FUNCIONALIDAD DE COMPARTIR ---
     sharePdfBtn.addEventListener("click", async function () {
@@ -411,3 +419,4 @@ document.addEventListener("DOMContentLoaded", function () {
     // Render inicial
     renderizarHistorial(cargarHistorial());
 });
+
