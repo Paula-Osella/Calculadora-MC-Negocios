@@ -4,17 +4,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const facturaContainer = document.getElementById("factura-container");
     const facturaPreview = document.getElementById("factura-preview");
     const downloadPdfBtn = document.getElementById("downloadPdfBtn");
-    const sharePdfBtn = document.getElementById("sharePdfBtn"); // Nuevo botón para compartir
+    const sharePdfBtn = document.getElementById("sharePdfBtn");
     const newCalculationBtn = document.getElementById("newCalculationBtn");
     const themeToggleBtn = document.getElementById("theme-toggle");
     const sunIcon = document.getElementById("sun-icon");
     const moonIcon = document.getElementById("moon-icon");
+    const tablaHistorialBody = document.getElementById('tablaHistorialBody');
 
-    // Formatear numero para los desimales 
-
+    // --- FUNCION PARA FORMATEAR NUMEROS (UNA SOLA VEZ) ---
     const formatNumberInput = (inputElement) => {
         inputElement.addEventListener("input", function () {
-            // Eliminar todos los caracteres que no sean números o coma/punto
             let raw = this.value.replace(/\./g, "").replace(",", ".");
             const num = parseFloat(raw);
             if (!isNaN(num)) {
@@ -30,8 +29,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     };
 
-    // Aplicar a todos los inputs
-    ["kilos", "precio", "descuento", "impuesto"].forEach((id) =>
+    // Aplicar el formateo a los campos numéricos
+    ["kilos", "precio", "descuento", "flete"].forEach((id) =>
         formatNumberInput(document.getElementById(id))
     );
 
@@ -108,29 +107,37 @@ document.addEventListener("DOMContentLoaded", function () {
     //       HISTORIAL DE FACTURAS
     // -------------------------------
     function guardarFacturaEnHistorial(factura) {
-        const historial = JSON.parse(localStorage.getItem('historialFacturas')) || [];
+        const historial = cargarHistorial();
+        factura.id = Date.now();
         historial.push(factura);
         localStorage.setItem('historialFacturas', JSON.stringify(historial));
     }
 
     function cargarHistorial() {
-        return JSON.parse(localStorage.getItem('historialFacturas')) || [];
+        let historial = JSON.parse(localStorage.getItem('historialFacturas')) || [];
+        historial = historial.map(factura => {
+            if (!factura.id) {
+                factura.id = Date.now() + Math.random(); 
+            }
+            return factura;
+        });
+        localStorage.setItem('historialFacturas', JSON.stringify(historial));
+        return historial;
     }
 
-    function eliminarFactura(cartaPorte) {
+    function eliminarFactura(facturaId) {
         let historial = cargarHistorial();
-        const nuevoHistorial = historial.filter(f => f.cartaPorte !== cartaPorte);
+        const nuevoHistorial = historial.filter(f => f.id !== facturaId);
         localStorage.setItem('historialFacturas', JSON.stringify(nuevoHistorial));
         renderizarHistorial(nuevoHistorial);
         showStatusMessage("Factura eliminada correctamente.", "success");
     }
 
     function renderizarHistorial(facturas) {
-        const tbody = document.getElementById('tablaHistorialBody');
-        tbody.innerHTML = '';
+        tablaHistorialBody.innerHTML = '';
 
         if (facturas.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" class="text-center p-4">No se encontraron facturas</td></tr>`;
+            tablaHistorialBody.innerHTML = `<tr><td colspan="9" class="text-center p-4">No se encontraron facturas</td></tr>`;
             return;
         }
 
@@ -141,28 +148,30 @@ document.addEventListener("DOMContentLoaded", function () {
             tr.innerHTML = `
                 <td class="border px-3 py-1 whitespace-nowrap">${factura.fecha}</td>
                 <td class="border px-3 py-1 whitespace-nowrap">${factura.cartaPorte}</td>
-                <td class="border px-3 py-1 whitespace-nowrap">${factura.producto}</td>
-                <td class="border px-3 py-1 whitespace-nowrap">${factura.kilos.toLocaleString('es-AR')}</td>
-                <td class="border px-3 py-1 whitespace-nowrap">$${factura.precio.toFixed(2)}</td>
+                <td class="border px-3 py-1 whitespace-nowrap ">${factura.producto}</td>
+                <td class="border px-3 py-1 whitespace-nowrap ">${factura.kilos.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                <td class="border px-3 py-1 whitespace-nowrap">$${factura.precio.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td class="border px-3 py-1 whitespace-nowrap">${factura.descuento}%</td>
-                <td class="border px-3 py-1 whitespace-nowrap">${factura.impuesto}%</td>
-                <td class="border px-3 py-1 whitespace-nowrap">$${factura.totalFinal.toFixed(2)}</td>
+                <td class="border px-3 py-1 whitespace-nowrap">${factura.flete}%</td>
+                <td class="border px-3 py-1 whitespace-nowrap">$${factura.totalFinal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td class="border px-3 py-1 whitespace-nowrap text-center">
-                    <button class="eliminar-btn" data-carta="${factura.cartaPorte}">
+                    <button class="eliminar-btn" data-id="${factura.id}" data-carta="${factura.cartaPorte}">
                         Eliminar
                     </button>
                 </td>
             `;
-            tbody.appendChild(tr);
+            tablaHistorialBody.appendChild(tr);
         });
 
-        document.querySelectorAll('.eliminar-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const carta = this.getAttribute('data-carta');
-
+        tablaHistorialBody.addEventListener('click', function (e) {
+            const target = e.target.closest('.eliminar-btn');
+            if (target) {
+                const facturaId = parseFloat(target.getAttribute('data-id'));
+                const carta = target.getAttribute('data-carta');
+                
                 Swal.fire({
                     title: '¿Estás seguro?',
-                    text: `Vas a eliminar la factura N° ${carta}`,
+                    text: `Vas a eliminar la factura N° ${carta || 'sin número'}`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#c19a43',
@@ -175,7 +184,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .then((result) => {
                     if (result.isConfirmed) {
-                        eliminarFactura(carta);
+                        eliminarFactura(facturaId);
                         Swal.fire({
                             title: '🗑️ Eliminada',
                             text: `La factura fue eliminada correctamente.`,
@@ -187,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         });
                     }
                 });
-            });
+            }
         });
     }
 
@@ -227,7 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const kilos = parseFloat(document.getElementById("kilos").value.replace(/\./g, "").replace(",", "."));
         const precio = parseFloat(document.getElementById("precio").value.replace(/\./g, "").replace(",", "."));
         const descuento = parseFloat(document.getElementById("descuento").value.replace(/\./g, "").replace(",", ".")) || 0;
-        const impuesto = parseFloat(document.getElementById("impuesto").value.replace(/\./g, "").replace(",", ".")) || 0;
+        const flete = parseFloat(document.getElementById("flete").value.replace(/\./g, "").replace(",", ".")) || 0;
 
         if (isNaN(kilos) || isNaN(precio) || kilos <= 0 || precio <= 0) {
             alert("Por favor, ingrese valores válidos y positivos para Kilogramos y Precio por Kilo.");
@@ -236,10 +245,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const subtotal = kilos * precio;
         const descuentoMonto = subtotal * (descuento / 100);
-        const impuestoMonto = subtotal * (impuesto / 100);
-        const totalFinal = subtotal - descuentoMonto + impuestoMonto;
+        const fleteMonto = subtotal * (flete / 100);
+        const totalFinal = subtotal - descuentoMonto - fleteMonto;
 
-        // Modificación del PDF monocromático
         facturaPreview.innerHTML = `
             <img src="assets/img/logo-mc-negocios-fondo.png" alt="Logo mc negocios" style="display: block; margin: 0 auto 20px auto; width: 600px; height: 300px; background-color: #1f2937"/>
             <div style="padding: 20px; font-family: 'Inter', sans-serif; border: 1px solid black; margin: 0 auto; max-width: 600px; background-color: white; color: black;">
@@ -252,7 +260,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <p><strong>Precio por kilo:</strong> $${precio.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
                 <p><strong>Subtotal:</strong> $${subtotal.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
                 <p><strong>Descuento (${descuento}%):</strong> -$${descuentoMonto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
-                <p><strong>Impuesto (${impuesto}%):</strong> +$${impuestoMonto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
+                <p><strong>Flete (${flete}%):</strong> -$${fleteMonto.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</p>
                 <hr>
                 <h3 style="text-align: right;"><strong>Total Final:</strong> $${totalFinal.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</h3>
             </div>
@@ -265,7 +273,7 @@ document.addEventListener("DOMContentLoaded", function () {
             kilos,
             precio,
             descuento,
-            impuesto,
+            flete,
             totalFinal
         });
 
@@ -275,71 +283,68 @@ document.addEventListener("DOMContentLoaded", function () {
         renderizarHistorial(cargarHistorial());
     });
 
-    // Evento para descargar el PDF (funcionalidad original)
     downloadPdfBtn.addEventListener("click", function () {
-    const cartaPorte = document.getElementById("cartaPorte").value.trim();
-    if (!cartaPorte) {
-        showStatusMessage("Debe ingresar el N° de Carta de Porte para descargar la factura.", "error");
-        return;
-    }
-
-    facturaContainer.style.display = "flex";
-
-    setTimeout(() => {
-        if (!window.jspdf || !window.jspdf.jsPDF) {
-            console.error("Error: jsPDF no está definido.");
-            showStatusMessage("Error: jsPDF no está cargado.", "error");
+        const cartaPorte = document.getElementById("cartaPorte").value.trim();
+        if (!cartaPorte) {
+            showStatusMessage("Debe ingresar el N° de Carta de Porte para descargar la factura.", "error");
             return;
         }
 
-        const { jsPDF } = window.jspdf;
+        facturaContainer.style.display = "flex";
 
-        // Obtenemos el contenido del preview
-        let content = facturaPreview.innerHTML;
+        setTimeout(() => {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                console.error("Error: jsPDF no está definido.");
+                showStatusMessage("Error: jsPDF no está cargado.", "error");
+                return;
+            }
 
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = content;
-        tempDiv.style.width = '800px';
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
-        document.body.appendChild(tempDiv);
+            const { jsPDF } = window.jspdf;
 
-        html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
-            const imgData = canvas.toDataURL("image/png");
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            let content = facturaPreview.innerHTML;
 
-            const imgWidth = 210;
-            const pageHeight = 297;
-            const imgHeight = canvas.height * imgWidth / canvas.width;
-            let heightLeft = imgHeight;
-            let position = 0;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            tempDiv.style.width = '800px';
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            document.body.appendChild(tempDiv);
 
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
+            html2canvas(tempDiv, { scale: 2, useCORS: true }).then(canvas => {
+                const imgData = canvas.toDataURL("image/png");
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-            while (heightLeft >= 0) {
-                position = heightLeft - imgHeight;
-                pdf.addPage();
+                const imgWidth = 210;
+                const pageHeight = 297;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
                 pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
                 heightLeft -= pageHeight;
-            }
 
-            pdf.save(`factura-${cartaPorte}.pdf`);
-            showStatusMessage("Factura descargada correctamente.", "success");
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
 
-            document.body.removeChild(tempDiv);
-        }).catch(error => {
-            console.error("Error al generar el PDF:", error);
-            showStatusMessage("Hubo un error al generar el PDF.", "error");
-            if (tempDiv && tempDiv.parentNode) {
+                pdf.save(`factura-${cartaPorte}.pdf`);
+                showStatusMessage("Factura descargada correctamente.", "success");
+
                 document.body.removeChild(tempDiv);
-            }
-        });
+            }).catch(error => {
+                console.error("Error al generar el PDF:", error);
+                showStatusMessage("Hubo un error al generar el PDF.", "error");
+                if (tempDiv && tempDiv.parentNode) {
+                    document.body.removeChild(tempDiv);
+                }
+            });
 
-    }, 50);
-});
+        }, 50);
+    });
 
-    // --- INICIO DE LA NUEVA FUNCIONALIDAD DE COMPARTIR ---
     sharePdfBtn.addEventListener("click", async function () {
         const cartaPorte = document.getElementById("cartaPorte").value.trim();
         if (!cartaPorte) {
@@ -347,7 +352,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // Primero, verificamos si la Web Share API está disponible
         if (!navigator.share) {
             showStatusMessage("La función de compartir no es compatible con este navegador.", "error");
             return;
@@ -356,7 +360,6 @@ document.addEventListener("DOMContentLoaded", function () {
         facturaContainer.style.display = "flex";
 
         try {
-            // Se usa el mismo proceso de html2canvas y jsPDF para obtener los datos del PDF
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = facturaPreview.innerHTML;
             tempDiv.style.width = '800px';
@@ -386,11 +389,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 heightLeft -= pageHeight;
             }
 
-            // Obtenemos el PDF como un Blob para poder compartirlo como archivo
             const pdfBlob = pdf.output('blob');
             const file = new File([pdfBlob], `factura-${cartaPorte}.pdf`, { type: 'application/pdf' });
 
-            // Ahora llamamos a la API de compartir con la información que queremos
             await navigator.share({
                 files: [file],
                 title: `Factura ${cartaPorte}`,
@@ -399,7 +400,6 @@ document.addEventListener("DOMContentLoaded", function () {
             
             showStatusMessage("Factura compartida correctamente.", "success");
         } catch (error) {
-            // Este catch se ejecuta si el usuario cancela la acción de compartir
             if (error.name !== "AbortError") {
                 console.error("Error al compartir el PDF:", error);
                 showStatusMessage("Hubo un error al intentar compartir el PDF.", "error");
@@ -411,7 +411,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
-    // --- FIN DE LA NUEVA FUNCIONALIDAD ---
 
     newCalculationBtn.addEventListener("click", function () {
         compraForm.reset();
@@ -427,7 +426,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // -------------------------------
     document.getElementById('filtroHistorial').addEventListener('submit', filtrarHistorial);
     document.getElementById('limpiarFiltros').addEventListener('click', limpiarFiltros);
-
     document.getElementById('verTodasFacturas').addEventListener('click', function () {
         const todas = cargarHistorial();
         if (todas.length === 0) {
@@ -439,5 +437,3 @@ document.addEventListener("DOMContentLoaded", function () {
     // Render inicial
     renderizarHistorial(cargarHistorial());
 });
-
-
